@@ -5,11 +5,11 @@ const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const apiRoutes = require('./routes/api');
-const path = require('path'); // <--- AÑADIDO: Módulo para manejar rutas
+const path = require('path');
 
 const app = express();
 
-// Security Security features (Helmet)
+// 1. SEGURIDAD y HEADERS (Debe ser lo primero)
 // Configuramos Helmet de forma unificada para los requisitos de FCC
 app.use(helmet({
   frameguard: { action: 'sameorigin' },
@@ -20,15 +20,8 @@ app.use(helmet({
 // CORS: Permitir peticiones desde freeCodeCamp para los tests
 app.use(cors({ origin: '*' }));
 
-// Body parser
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-// 1. Servir archivos estáticos (CSS/JS) desde la carpeta 'public'
-// Usamos path.join(process.cwd(), 'public') para construir una ruta absoluta y segura
-app.use('/public', express.static(path.join(process.cwd(), 'public')));
-
 // Asegurar headers manualmente (refuerzo para los tests de FCC)
+// LO MOVEMOS AQUÍ ARRIBA para que se apliquen a TODAS las peticiones.
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-DNS-Prefetch-Control', 'off');
@@ -36,17 +29,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// 2. Routing: Ruta principal (/) para devolver el index.html
-// CORREGIDO: Buscamos index.html DENTRO de la carpeta 'public'
+// 2. BODY PARSER
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// 3. ARCHIVOS ESTÁTICOS Y VISTAS
+// Servir archivos estáticos (CSS/JS) desde la carpeta 'public'
+app.use('/public', express.static(path.join(process.cwd(), 'public')));
+
+// Routing: Ruta principal (/) para devolver index.html
+// CORREGIDO: Buscamos index.html DENTRO de la carpeta 'views'
 app.get('/', function (req, res) {
-  // Nota: Debes asegurar que existe el archivo public/index.html
-  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+  res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
 
 // API routes
 app.use('/api', apiRoutes);
 
-// 404 handler 
+// 404 handler 
 app.use(function(req, res, next) {
   res.status(404)
     .type('text')
@@ -54,7 +54,7 @@ app.use(function(req, res, next) {
 });
 
 const PORT = process.env.PORT || 3000;
-const dbURI = process.env.DB; 
+const dbURI = process.env.DB; 
 
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
