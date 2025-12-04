@@ -10,23 +10,22 @@ const path = require('path');
 const app = express();
 
 // ======================================================================
-// 1. SEGURIDAD (Helmet, Headers Manuales y CORS) - DEBE SER LO PRIMERO
+// 1. SEGURIDAD (Headers Manuales y CORS) - DEBE SER LO PRIMERO
 // ======================================================================
 
-// Desactivamos Helmet para dejar solo los headers específicos requeridos por FCC.
-// Esto simplifica la configuración y previene conflictos.
-app.use(helmet.hidePoweredBy()); 
+// CORRECCIÓN: Desactivamos Helmet para evitar conflictos y solo usamos manual
+app.disable('x-powered-by'); 
 
 // CORS: Permitir peticiones desde freeCodeCamp para los tests
 app.use(cors({ origin: '*' }));
 
-// Asegurar headers manualmente y de forma estricta (Tests 2, 3, 4)
+// Asegurar headers manuales y de forma estricta (Tests 2, 3, 4)
 app.use((req, res, next) => {
-  // Test 2: X-Frame-Options (frameguard)
+  // Test 2: X-Frame-Options
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  // Test 3: X-DNS-Prefetch-Control (dnsPrefetchControl)
+  // Test 3: X-DNS-Prefetch-Control
   res.setHeader('X-DNS-Prefetch-Control', 'off');
-  // Test 4: Referrer-Policy (referrerPolicy)
+  // Test 4: Referrer-Policy
   res.setHeader('Referrer-Policy', 'same-origin');
   next();
 });
@@ -35,8 +34,7 @@ app.use((req, res, next) => {
 // 2. BODY PARSER (Crucial para Tests 5 y 6)
 // ======================================================================
 
-// CORRECCIÓN FINAL: Cambiamos a extended: true para mayor compatibilidad
-// con el envío de formularios del test runner de FCC.
+// Body parser con extended: true para máxima compatibilidad con el test runner
 app.use(bodyParser.urlencoded({ extended: true })); 
 app.use(bodyParser.json());
 
@@ -57,7 +55,6 @@ app.get('/', function (req, res) {
 // 4. RUTAS API
 // ======================================================================
 
-// API routes
 app.use('/api', apiRoutes);
 
 // 404 handler 
