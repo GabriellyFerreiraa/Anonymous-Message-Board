@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const apiRoutes = require('./routes/api');
@@ -10,43 +9,40 @@ const path = require('path');
 const app = express();
 
 // ======================================================================
-// 1. SEGURIDAD (Headers Manuales y CORS) - DEBE SER LO PRIMERO
+// 1. SEGURIDAD MÍNIMA (La solución más fiable para Tests 2, 3, 4)
 // ======================================================================
 
-// CORRECCIÓN: Desactivamos Helmet para evitar conflictos y solo usamos manual
-app.disable('x-powered-by'); 
+// Deshabilitamos X-Powered-By
+app.disable('x-powered-by');
 
-// CORS: Permitir peticiones desde freeCodeCamp para los tests
+// CORS para el test runner de FCC
 app.use(cors({ origin: '*' }));
 
-// Asegurar headers manuales y de forma estricta (Tests 2, 3, 4)
+// Headers de seguridad manuales (Tests 2, 3, 4)
 app.use((req, res, next) => {
-  // Test 2: X-Frame-Options
+  // Test 2: Only allow your site to be loaded in an iFrame on your own pages.
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  // Test 3: X-DNS-Prefetch-Control
+  // Test 3: Do not allow DNS prefetching.
   res.setHeader('X-DNS-Prefetch-Control', 'off');
-  // Test 4: Referrer-Policy
+  // Test 4: Only allow your site to send the referrer for your own pages.
   res.setHeader('Referrer-Policy', 'same-origin');
   next();
 });
 
 // ======================================================================
-// 2. BODY PARSER (Crucial para Tests 5 y 6)
+// 2. BODY PARSER (Crucial para todos los tests POST/DELETE/PUT)
 // ======================================================================
 
-// Body parser con extended: true para máxima compatibilidad con el test runner
-//app.use(bodyParser.urlencoded({ extended: true })); 
-//app.use(bodyParser.json());
-
+// La configuración más compatible para todos los tests de formulario de FCC
+app.use(bodyParser.urlencoded({ extended: true })); 
+app.use(bodyParser.json()); // Necesario para JSON, aunque el test runner use form data
 
 // ======================================================================
 // 3. ARCHIVOS ESTÁTICOS Y VISTAS
 // ======================================================================
 
-// Servir archivos estáticos (CSS/JS) desde la carpeta 'public'
 app.use('/public', express.static(path.join(process.cwd(), 'public')));
 
-// Routing: Ruta principal (/) para devolver index.html
 app.get('/', function (req, res) {
   res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
@@ -63,6 +59,8 @@ app.use(function(req, res, next) {
     .type('text')
     .send('Not Found');
 });
+
+// ... (Conexión a MongoDB y listen)
 
 const PORT = process.env.PORT || 3000;
 const dbURI = process.env.DB; 
