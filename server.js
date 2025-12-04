@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
+const bodyParser = require('body-parser'); // DEJAMOS SOLO EL BODY PARSER AQUÍ
 const cors = require('cors');
 const apiRoutes = require('./routes/api');
 const path = require('path');
@@ -9,36 +9,31 @@ const path = require('path');
 const app = express();
 
 // ======================================================================
-// 1. SEGURIDAD MÍNIMA (La solución más fiable para Tests 2, 3, 4)
+// 1. SEGURIDAD MÍNIMA Y HEADERS (Solución para Tests 2, 3, 4)
 // ======================================================================
 
-// Deshabilitamos X-Powered-By
-app.disable('x-powered-by');
+app.disable('x-powered-by'); // El reemplazo más simple para Helmet
 
-// CORS para el test runner de FCC
 app.use(cors({ origin: '*' }));
 
-// Headers de seguridad manuales (Tests 2, 3, 4)
+// Headers de seguridad manuales (Crucial para Tests 2, 3, 4)
 app.use((req, res, next) => {
-  // Test 2: Only allow your site to be loaded in an iFrame on your own pages.
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  // Test 3: Do not allow DNS prefetching.
   res.setHeader('X-DNS-Prefetch-Control', 'off');
-  // Test 4: Only allow your site to send the referrer for your own pages.
   res.setHeader('Referrer-Policy', 'same-origin');
   next();
 });
 
 // ======================================================================
-// 2. BODY PARSER (Crucial para todos los tests POST/DELETE/PUT)
+// 2. BODY PARSER MÍNIMO (Solución para Tests 5, 6, 9, 10, 12)
 // ======================================================================
 
-// La configuración más compatible para todos los tests de formulario de FCC
+// USAMOS SÓLO urlencoded, ya que el test runner envía form data
 app.use(bodyParser.urlencoded({ extended: true })); 
-app.use(bodyParser.json()); // Necesario para JSON, aunque el test runner use form data
+// app.use(bodyParser.json()); <-- COMENTADO O ELIMINADO para evitar conflictos
 
 // ======================================================================
-// 3. ARCHIVOS ESTÁTICOS Y VISTAS
+// 3. RUTAS y LISTEN
 // ======================================================================
 
 app.use('/public', express.static(path.join(process.cwd(), 'public')));
@@ -47,20 +42,11 @@ app.get('/', function (req, res) {
   res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
 
-// ======================================================================
-// 4. RUTAS API
-// ======================================================================
-
 app.use('/api', apiRoutes);
 
-// 404 handler 
 app.use(function(req, res, next) {
-  res.status(404)
-    .type('text')
-    .send('Not Found');
+  res.status(404).type('text').send('Not Found');
 });
-
-// ... (Conexión a MongoDB y listen)
 
 const PORT = process.env.PORT || 3000;
 const dbURI = process.env.DB; 

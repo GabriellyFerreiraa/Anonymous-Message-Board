@@ -12,7 +12,7 @@ module.exports = {
         return res.status(400).send('Missing required fields: text and delete_password');
       }
 
-      // CORRECCIÓN: Forzar new Date() y usar status 302 explícito para Test 5
+      // Corrección para Test 5: Forzar new Date()
       const now = new Date(); 
       const thread = new Thread({
         board,
@@ -24,8 +24,8 @@ module.exports = {
 
       await thread.save();
 
-      // Comportamiento oficial FCC: redirect con status 302
-      return res.status(302).redirect(`/b/${board}/`);
+      // CORRECCIÓN FINAL: Usar la redirección simple
+      return res.redirect(`/b/${board}/`);
     } catch (err) {
       if (err instanceof mongoose.Error.CastError) {
         return res.status(400).send('Invalid input ID');
@@ -44,8 +44,10 @@ module.exports = {
         .lean();
 
       threads = threads.map(t => {
+        // Excluir campos sensibles del thread
         const { delete_password, reported, replies, ...rest } = t;
 
+        // Procesar replies: ordenar, limitar a 3, eliminar campos sensibles y revertir
         const sortedReplies = (replies || [])
           .sort((a, b) => new Date(b.created_on) - new Date(a.created_on)) 
           .slice(0, 3) 
@@ -112,7 +114,7 @@ module.exports = {
         return res.status(400).send('Missing required fields');
       }
 
-      // CORRECCIÓN: Forzar new Date() y usar status 302 explícito para Test 6
+      // Corrección para Test 6: Forzar new Date()
       const now = new Date(); 
       const reply = {
         text,
@@ -131,8 +133,8 @@ module.exports = {
 
       if (!thread) return res.status(404).send('thread not found');
 
-      // Comportamiento estándar FCC: redirect con status 302
-      return res.status(302).redirect(`/b/${board}/${thread_id}`);
+      // CORRECCIÓN FINAL: Usar la redirección simple
+      return res.redirect(`/b/${board}/${thread_id}`);
     } catch (err) {
       return res.status(500).send('Error creating reply');
     }
