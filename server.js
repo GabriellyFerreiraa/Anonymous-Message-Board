@@ -35,8 +35,8 @@ app.use((req, res, next) => {
 // ======================================================================
 
 // Body parser con extended: true para máxima compatibilidad con el test runner
-app.use(bodyParser.urlencoded({ extended: true })); 
-app.use(bodyParser.json());
+//app.use(bodyParser.urlencoded({ extended: true })); 
+//app.use(bodyParser.json());
 
 
 // ======================================================================
