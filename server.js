@@ -13,23 +13,20 @@ const app = express();
 // 1. SEGURIDAD (Helmet, Headers Manuales y CORS) - DEBE SER LO PRIMERO
 // ======================================================================
 
-// Configuramos Helmet para los requisitos de FCC (Tests 2, 3, 4)
-app.use(helmet({
-  // Test 2: Only allow your site to be loaded in an iFrame on your own pages.
-  frameguard: { action: 'sameorigin' },
-  // Test 3: Do not allow DNS prefetching.
-  dnsPrefetchControl: { allow: false },
-  // Test 4: Only allow your site to send the referrer for your own pages.
-  referrerPolicy: { policy: 'same-origin' }
-}));
+// Desactivamos Helmet para dejar solo los headers específicos requeridos por FCC.
+// Esto simplifica la configuración y previene conflictos.
+app.use(helmet.hidePoweredBy()); 
 
 // CORS: Permitir peticiones desde freeCodeCamp para los tests
 app.use(cors({ origin: '*' }));
 
-// Asegurar headers manualmente (Refuerzo para los tests de FCC)
+// Asegurar headers manualmente y de forma estricta (Tests 2, 3, 4)
 app.use((req, res, next) => {
+  // Test 2: X-Frame-Options (frameguard)
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  // Test 3: X-DNS-Prefetch-Control (dnsPrefetchControl)
   res.setHeader('X-DNS-Prefetch-Control', 'off');
+  // Test 4: Referrer-Policy (referrerPolicy)
   res.setHeader('Referrer-Policy', 'same-origin');
   next();
 });
@@ -38,8 +35,9 @@ app.use((req, res, next) => {
 // 2. BODY PARSER (Crucial para Tests 5 y 6)
 // ======================================================================
 
-// Body parser debe estar aquí para que las rutas POST/DELETE/PUT puedan leer req.body
-app.use(bodyParser.urlencoded({ extended: false }));
+// CORRECCIÓN FINAL: Cambiamos a extended: true para mayor compatibilidad
+// con el envío de formularios del test runner de FCC.
+app.use(bodyParser.urlencoded({ extended: true })); 
 app.use(bodyParser.json());
 
 
@@ -51,7 +49,6 @@ app.use(bodyParser.json());
 app.use('/public', express.static(path.join(process.cwd(), 'public')));
 
 // Routing: Ruta principal (/) para devolver index.html
-// Corregido: Busca el archivo en la ruta views/index.html (basado en tu estructura)
 app.get('/', function (req, res) {
   res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
