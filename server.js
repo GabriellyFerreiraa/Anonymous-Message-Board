@@ -9,13 +9,11 @@ const path = require('path');
 const app = express();
 
 // ======================================================================
-// 1. SEGURIDAD MÍNIMA Y HEADERS (Solución para Tests 2, 3, 4)
+// 1. SEGURIDAD MÍNIMA Y HEADERS (Tests 2, 3, 4)
 // ======================================================================
 
-// Deshabilitamos X-Powered-By (Reemplazo simple para Helmet)
 app.disable('x-powered-by');
 
-// CORS para el test runner de FCC
 app.use(cors({ origin: '*' }));
 
 // Headers de seguridad manuales
@@ -27,10 +25,9 @@ app.use((req, res, next) => {
 });
 
 // ======================================================================
-// 2. BODY PARSER (Crucial para todos los tests POST/DELETE/PUT)
+// 2. BODY PARSER (Tests POST/DELETE/PUT)
 // ======================================================================
 
-// Configuración más compatible para form data (Tests 5, 6, 9, 10, 12)
 app.use(bodyParser.urlencoded({ extended: true })); 
 app.use(bodyParser.json()); 
 
@@ -38,12 +35,12 @@ app.use(bodyParser.json());
 // 3. RUTAS y LISTEN
 // ======================================================================
 
-// Servir archivos estáticos y la vista principal
+// Servir archivos estáticos
 app.use('/public', express.static(path.join(process.cwd(), 'public')));
 
+// 🚨 CORRECCIÓN DE RUTA DE VISTA (ENOENT Fix) 🚨
+// Aseguramos que la ruta a 'views/index.html' sea correcta.
 app.get('/', function (req, res) {
-  // Nota: Asumimos que tienes 'views/index.html' o 'public/index.html'
-  // Si usas la estructura base de FCC, el archivo de la interfaz debe estar en /views.
   res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
 
@@ -58,7 +55,8 @@ app.use(function(req, res, next) {
 const PORT = process.env.PORT || 3000;
 const dbURI = process.env.DB; 
 
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+// CONEXIÓN MONGOOSE CORREGIDA (sin opciones obsoletas)
+mongoose.connect(dbURI)
   .then(() => {
     console.log('Database connected successfully');
     app.listen(PORT, () => {

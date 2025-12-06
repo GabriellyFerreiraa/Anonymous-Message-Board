@@ -12,7 +12,7 @@ router.route('/threads/:board')
 // Reply routes: /api/replies/:board
 router.route('/replies/:board')
   .post(controller.createReply)
-  .get(controller.getReplies) // Esta ruta usa thread_id como query: /api/replies/:board?thread_id=...
+  .get(controller.getReplies) 
   .delete(controller.deleteReply)
   .put(controller.reportReply);
 
