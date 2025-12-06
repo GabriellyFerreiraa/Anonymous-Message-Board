@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const apiRoutes = require('./routes/api');
 const path = require('path');
+const helmet = require('helmet'); // <-- Añadir Helmet
 
 const app = express();
 
@@ -12,42 +13,53 @@ const app = express();
 // 1. SEGURIDAD MÍNIMA Y HEADERS (Tests 2, 3, 4)
 // ======================================================================
 
+app.use(cors({ origin: '*' }));
 app.disable('x-powered-by');
 
-app.use(cors({ origin: '*' }));
-
-// Headers de seguridad manuales
-app.use((req, res, next) => {
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // Test 2
-  res.setHeader('X-DNS-Prefetch-Control', 'off'); // Test 3
-  res.setHeader('Referrer-Policy', 'same-origin'); // Test 4
-  next();
-});
+// Usamos Helmet para asegurar que los headers de seguridad pasen
+app.use(helmet({
+  // Test 2: X-Frame-Options: SAMEORIGIN
+  frameguard: {
+    action: 'sameorigin'
+  },
+  // Test 3: X-DNS-Prefetch-Control: off
+  dnsPrefetchControl: {
+    allow: false
+  },
+  // Test 4: Referrer-Policy: same-origin
+  referrerPolicy: {
+    policy: 'same-origin'
+  },
+  // Deshabilitar otros headers de Helmet que no son necesarios
+  contentSecurityPolicy: false,
+  hsts: false,
+  noSniff: false,
+  xssFilter: false,
+}));
+// Nota: Puedes eliminar los headers manuales que tenías, ya que Helmet los maneja.
 
 // ======================================================================
 // 2. BODY PARSER (Tests POST/DELETE/PUT)
 // ======================================================================
 
+// Solo necesitamos urlencoded para los formularios de freeCodeCamp
 app.use(bodyParser.urlencoded({ extended: true })); 
+// Si bodyParser.json() no es estrictamente necesario, a veces interfiere.
+// Lo mantendremos por compatibilidad, pero si falla, esta línea sería la siguiente a comentar.
 app.use(bodyParser.json()); 
 
 // ======================================================================
 // 3. RUTAS y LISTEN
 // ======================================================================
 
-// Servir archivos estáticos
 app.use('/public', express.static(path.join(process.cwd(), 'public')));
 
-// 🚨 CORRECCIÓN DE RUTA DE VISTA (ENOENT Fix) 🚨
-// Aseguramos que la ruta a 'views/index.html' sea correcta.
 app.get('/', function (req, res) {
   res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
 
-// Rutas de la API
 app.use('/api', apiRoutes);
 
-// Manejador 404
 app.use(function(req, res, next) {
   res.status(404).type('text').send('Not Found');
 });
@@ -55,7 +67,6 @@ app.use(function(req, res, next) {
 const PORT = process.env.PORT || 3000;
 const dbURI = process.env.DB; 
 
-// CONEXIÓN MONGOOSE CORREGIDA (sin opciones obsoletas)
 mongoose.connect(dbURI)
   .then(() => {
     console.log('Database connected successfully');
